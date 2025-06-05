@@ -1,64 +1,78 @@
 // src/App.jsx
-import React, { useState, useEffect } from 'react';
-import useLocalStorage from './hooks/useLocalStorage'; // Import your custom hook
-import LoadingScreen from './components/LoadingScreen'; // Import the LoadingScreen component
+import React, { useState, useEffect, useCallback } from 'react';
+import useLocalStorage from './hooks/useLocalStorage'; // Import your custom hook for storage.
+import LoadingScreen from './components/LoadingScreen'; // Import the loading screen component.
+import LinkInput from './components/LinkInput'; // Import the link input form component.
+import LinkList from './components/LinkList'; // Import the list of links component.
 
+// The main component that runs your Sclicky application.
 function App() {
-  // Use the custom hook for links state, initialized from localStorage
-  // For now, it's an empty array. You'll add links via LinkInput later.
+  // Use the custom 'useLocalStorage' hook to manage the list of links.
+  // 'sclicky_links' is the key in local storage, and [] is the initial value if no links are saved.
   const [links, setLinks] = useLocalStorage('sclicky_links', []);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // State to control the loading screen.
 
-  // Simulate a brief loading time for demonstration
+  // This effect runs once when the app starts to simulate a loading time.
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500); // Show loading screen for 500ms
-    return () => clearTimeout(timer);
+      setIsLoading(false); // After 1 second, hide the loading screen.
+    }, 1000); // 1-second loading screen.
+    return () => clearTimeout(timer); // Clean up the timer if the component unmounts.
   }, []);
 
-  // Placeholder functions for link management (you'll fill these out more later)
-  const handleAddLink = (url) => {
-    console.log("Add link called:", url);
-    // Logic to add a new link to the 'links' array
-    // (You'll expand this when you build LinkInput.jsx)
-  };
+  // Function to add a new link to the list.
+  // 'useCallback' helps optimize performance by preventing this function from recreating unnecessarily.
+  const handleAddLink = useCallback((url) => {
+    const newLink = {
+      id: Date.now(), // Create a unique ID for the new link using the current timestamp.
+      url: url,
+      clicks: 0, // New links start with 0 clicks.
+    };
+    // Update the 'links' state by adding the new link to the existing list.
+    setLinks((prevLinks) => [...prevLinks, newLink]);
+  }, [setLinks]); // This function only recreates if 'setLinks' changes (which it won't).
 
-  const handleLinkClick = (id) => {
-    console.log("Link clicked:", id);
-    // Logic to increment click count
-    // (You'll expand this when you build LinkItem.jsx)
-  };
+  // Function to handle a link being clicked.
+  const handleLinkClick = useCallback((id) => {
+    // Find the link by its ID and increase its click count.
+    setLinks((prevLinks) =>
+      prevLinks.map((link) =>
+        link.id === id ? { ...link, clicks: link.clicks + 1 } : link
+      )
+    );
+  }, [setLinks]); // This function only recreates if 'setLinks' changes.
 
-  const handleDeleteLink = (id) => {
-    console.log("Delete link called:", id);
-    // Logic to delete a link
-    // (You'll expand this when you build LinkItem.jsx)
-  };
+  // Function to delete a link from the list.
+  const handleDeleteLink = useCallback((id) => {
+    // Filter out the link with the matching ID to remove it from the list.
+    setLinks((prevLinks) => prevLinks.filter((link) => link.id !== id));
+  }, [setLinks]); // This function only recreates if 'setLinks' changes.
 
-  // Display loading screen if app is still loading
+  // If the app is still loading, show the LoadingScreen component.
   if (isLoading) {
     return <LoadingScreen />;
   }
 
+  // Once loading is done, render the main application content.
   return (
-    <div className="min-h-screen bg-gray-100 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        {/* Sclicky Header - Basic Styling (Success will enhance this) */}
-        <h1 className="text-5xl font-extrabold text-center text-gray-900 mb-12 tracking-tight">
-          Sclicky <span className="text-blue-600"></span>
+    // Main container for the whole app, with overall styling.
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 py-12 px-4 sm:px-6 lg:px-8 font-sans">
+      {/* Content wrapper to limit width and center content. */}
+      <div className="max-w-3xl mx-auto space-y-10">
+        {/* Sclicky Header - Styled with Tailwind CSS. */}
+        <h1 className="text-6xl font-extrabold text-center text-gray-900 tracking-tight leading-tight">
+          Sclicky <span className="text-blue-600">.</span>
         </h1>
 
-        {/* Placeholder for LinkInput (You'll replace this with the component later) */}
-        <div className="mb-8 p-6 bg-white rounded-lg shadow-md">
-          <p className="text-center text-lg text-gray-700">Link Input section will go here (Your task, Solomon!)</p>
-        </div>
+        {/* Link Input Section - Uses the LinkInput component. */}
+        <LinkInput onAddLink={handleAddLink} />
 
-        {/* Placeholder for LinkList (Success will get this working) */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">My Saved Links</h2>
-          <p className="text-center text-gray-600 text-lg">Link List section will go here (Success's task!)</p>
-        </div>
+        {/* Link List Section - Uses the LinkList component to display all links. */}
+        <LinkList
+          links={links} // Pass the current list of links.
+          onLinkClick={handleLinkClick} // Pass the function to handle link clicks.
+          onDeleteLink={handleDeleteLink} // Pass the function to handle link deletion.
+        />
       </div>
     </div>
   );
