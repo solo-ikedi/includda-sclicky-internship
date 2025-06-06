@@ -48,6 +48,10 @@ function LinkItem({ link, onLinkClick, onDeleteLink }) {
         >
           {link.url}
         </a>
+        {/* Display the platform, if available */}
+        {link.platform && (
+          <p className="text-gray-500 text-sm mt-0.5">Platform: <span className="font-semibold text-gray-700">{link.platform}</span></p>
+        )}
         {/* Display the total clicks for this link. */}
         <p className="text-gray-600 text-sm mt-1">Total Clicks: <span className="font-semibold text-gray-800">{link.clicks}</span></p>
       </div>
