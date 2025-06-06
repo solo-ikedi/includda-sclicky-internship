@@ -16,7 +16,7 @@ function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false); // After 1 second, hide the loading screen.
-    }, 1000); // 1-second loading screen.
+    }, 10000); // 1-second loading screen.
     return () => clearTimeout(timer); // Clean up the timer if the component unmounts.
   }, []);
 
